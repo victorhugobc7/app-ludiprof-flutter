@@ -1,6 +1,8 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:liquid_glass_easy/liquid_glass_easy.dart';
+
 import 'package:app_ludiprof/Scenes/home/home_view.dart';
+import 'package:app_ludiprof/Scenes/dashboard/dashboard_view.dart';
 import 'package:app_ludiprof/Scenes/profile/profile_view.dart';
 import 'package:app_ludiprof/Design System/Shared/colors.dart';
 
@@ -16,59 +18,52 @@ class _MainTabViewState extends State<MainTabView> {
 
   final List<Widget> _pages = [
     const HomeView(),
+    const DashboardView(),
     const ProfileView(),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final navBarWidth = screenWidth - 48; // 24px margin each side
+
     return Scaffold(
-      body: Stack(
+      body: LiquidGlassView(
+        backgroundWidget: _pages[_currentIndex],
+        realTimeCapture: _currentIndex == 0,
         children: [
-          _pages[_currentIndex],
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: ClipRRect(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    border: Border(
-                      top: BorderSide(
-                        color: Colors.white.withValues(alpha: 0.5),
-                        width: 1.5,
-                      ),
-                    ),
-                  ),
-                  child: BottomNavigationBar(
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    currentIndex: _currentIndex,
-                    onTap: (index) {
-                      setState(() {
-                        _currentIndex = index;
-                      });
-                    },
-                    selectedItemColor: AppColors.primary,
-                    unselectedItemColor: AppColors.textSecondary,
-                    items: const [
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.home_outlined),
-                        activeIcon: Icon(Icons.home),
-                        label: 'Início',
-                      ),
-                      BottomNavigationBarItem(
-                        icon: Icon(Icons.person_outline),
-                        activeIcon: Icon(Icons.person),
-                        label: 'Perfil',
-                      ),
-                    ],
-                  ),
-                ),
+          LiquidGlassBottomNavBar(
+            width: navBarWidth,
+            height: 64,
+            bottomMargin: MediaQuery.of(context).padding.bottom + 16,
+            distortion: 0.4,
+            items: const [
+              LiquidGlassTabBarItem(
+                icon: Icons.menu_book_outlined,
+                selectedIcon: Icons.menu_book,
+                label: 'Inicio',
               ),
-            ),
+              LiquidGlassTabBarItem(
+                icon: Icons.bar_chart_outlined,
+                selectedIcon: Icons.bar_chart,
+                label: 'Estatisticas',
+              ),
+              LiquidGlassTabBarItem(
+                icon: Icons.person_outline,
+                selectedIcon: Icons.person,
+                label: 'Perfil',
+              ),
+            ],
+            selectedIndex: _currentIndex,
+            onChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+            },
+            // #9FD9FF at 30% opacity for selected tab
+            selectionColor: AppColors.primary.withValues(alpha: 0.30),
+            selectedItemColor: AppColors.textPrimary,
+            unselectedItemColor: AppColors.textSecondary,
           ),
         ],
       ),

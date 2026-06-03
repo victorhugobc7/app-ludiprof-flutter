@@ -80,7 +80,7 @@ class NotificationService {
 
       await _flutterLocalNotificationsPlugin.zonedSchedule(
         id: 0,
-        title: 'Hora de Estudar! 📚',
+        title: 'Hora de Estudar!',
         body: 'Você tem Decks pendentes de revisão. Mantenha sua ofensiva!',
         scheduledDate: tz.TZDateTime.from(earliestDueDate, tz.local),
         notificationDetails: platformChannelSpecifics,
