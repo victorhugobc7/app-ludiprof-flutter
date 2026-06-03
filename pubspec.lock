@@ -81,6 +81,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.9"
+  dbus:
+    dependency: transitive
+    description:
+      name: dbus
+      sha256: d0c98dcd4f5169878b6cf8f6e0a52403a9dff371a3e2f019697accbf6f44a270
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.7.12"
+  equatable:
+    dependency: transitive
+    description:
+      name: equatable
+      sha256: "3e0141505477fd8ad55d6eb4e7776d3fe8430be8e497ccb1521370c3f21a3e2b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.8"
   extended_image:
     dependency: transitive
     description:
@@ -113,6 +129,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
+  fixnum:
+    dependency: transitive
+    description:
+      name: fixnum
+      sha256: b6dc7065e46c974bc7c5f143080a6764ec7a4be6da1285ececdc37be96de53be
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
+  fl_chart:
+    dependency: "direct main"
+    description:
+      name: fl_chart
+      sha256: "5276944c6ffc975ae796569a826c38a62d2abcf264e26b88fa6f482e107f4237"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.70.2"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -134,6 +166,38 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.0"
+  flutter_local_notifications:
+    dependency: "direct main"
+    description:
+      name: flutter_local_notifications
+      sha256: "0d9035862236fe38250fe1644d7ed3b8254e34a21b2c837c9f539fbb3bba5ef1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "21.0.0"
+  flutter_local_notifications_linux:
+    dependency: transitive
+    description:
+      name: flutter_local_notifications_linux
+      sha256: e0f25e243c6c44c825bbbc6b2b2e76f7d9222362adcfe9fd780bf01923c840bd
+      url: "https://pub.dev"
+    source: hosted
+    version: "8.0.0"
+  flutter_local_notifications_platform_interface:
+    dependency: transitive
+    description:
+      name: flutter_local_notifications_platform_interface
+      sha256: e7db3d5b49c2b7ecc68deba4aaaa67a348f92ee0fef34c8e4b4459dbef0d7307
+      url: "https://pub.dev"
+    source: hosted
+    version: "11.0.0"
+  flutter_local_notifications_windows:
+    dependency: transitive
+    description:
+      name: flutter_local_notifications_windows
+      sha256: "3a2654ba104fbb52c618ebed9def24ef270228470718c43b3a6afcd5c81bef0c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   flutter_localizations:
     dependency: transitive
     description: flutter
@@ -160,14 +224,38 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  fsrs:
+    dependency: "direct main"
+    description:
+      name: fsrs
+      sha256: b50dbee450a424dbac4fb0f49cae25ff2e4e6d01844caa1ec0c26de5baba8071
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.1"
+  google_fonts:
+    dependency: "direct main"
+    description:
+      name: google_fonts
+      sha256: "4e9391085e524954a51e3625b7c9c7e9851dc3f376603208bb45c24b9a66255d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "8.1.0"
   hive:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: hive
       sha256: "8dcf6db979d7933da8217edcec84e9df1bdb4e4edc7fc77dbd5aa74356d6d941"
       url: "https://pub.dev"
     source: hosted
     version: "2.2.3"
+  hive_flutter:
+    dependency: "direct main"
+    description:
+      name: hive_flutter
+      sha256: dca1da446b1d808a51689fb5d0c6c9510c0a2ba01e22805d492c73b68e33eecc
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   hooks:
     dependency: transitive
     description:
@@ -201,7 +289,7 @@ packages:
     source: hosted
     version: "4.1.2"
   intl:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: intl
       sha256: "3df61194eb431efc39c4ceba583b95633a403f46c9fd341e550ce0bfa50e9aa5"
@@ -304,6 +392,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.17.0"
+  nested:
+    dependency: transitive
+    description:
+      name: nested
+      sha256: "03bac4c528c64c95c722ec99280375a6f2fc708eec17c7b3f07253b626cd2a20"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   objective_c:
     dependency: transitive
     description:
@@ -408,6 +504,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
+  provider:
+    dependency: "direct main"
+    description:
+      name: provider
+      sha256: "4e82183fa20e5ca25703ead7e05de9e4cceed1fbd1eadc1ac3cb6f565a09f272"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.1.5+1"
   pub_semver:
     dependency: transitive
     description:
@@ -416,14 +520,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
-  quest_gamification:
-    dependency: "direct main"
-    description:
-      name: quest_gamification
-      sha256: a623235f917d2ff0f029cc72e2aa9b2202691830510a1c7615f35e20589992b1
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.0"
   record_use:
     dependency: transitive
     description:
@@ -477,14 +573,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.10.2"
-  spaced_repetition:
-    dependency: "direct main"
-    description:
-      name: spaced_repetition
-      sha256: b77033b53164d3bdfbecbf8b3c5eb03d28dc6f197f342c6bb24fe01cf9cfc561
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.0"
   stack_trace:
     dependency: transitive
     description:
@@ -533,6 +621,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.3.0"
+  timezone:
+    dependency: "direct main"
+    description:
+      name: timezone
+      sha256: "784a5e34d2eb62e1326f24d6f600aaaee452eb8ca8ef2f384a59244e292d158b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.11.0"
   two_dimensional_scrollables:
     dependency: transitive
     description:
@@ -557,6 +653,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.12"
+  uuid:
+    dependency: "direct main"
+    description:
+      name: uuid
+      sha256: "1fef9e8e11e2991bb773070d4656b7bd5d850967a2456cfc83cf47925ba79489"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.5.3"
   vector_graphics:
     dependency: transitive
     description:

@@ -1,0 +1,52 @@
+[
+  {
+    "question": "O que é a BNCC?",
+    "answer": "A Base Nacional Comum Curricular é um documento normativo que define o conjunto de aprendizagens essenciais que todos os alunos devem desenvolver ao longo da Educação Básica.",
+    "type": "conceito"
+  },
+  {
+    "question": "Qual a diferença entre avaliação formativa e somativa?",
+    "answer": "A avaliação formativa ocorre durante o processo de ensino-aprendizagem para orientar ajustes, enquanto a somativa avalia o resultado final de um período letivo.",
+    "type": "conceito"
+  },
+  {
+    "question": "O que é a Taxonomia de Bloom?",
+    "answer": "É uma classificação hierárquica dos objetivos educacionais em seis níveis cognitivos: lembrar, compreender, aplicar, analisar, avaliar e criar.",
+    "type": "conceito"
+  },
+  {
+    "question": "O que são competências socioemocionais?",
+    "answer": "São habilidades relacionadas à capacidade de gerir emoções, estabelecer relações positivas, tomar decisões responsáveis e lidar com desafios de forma construtiva.",
+    "type": "conceito"
+  },
+  {
+    "question": "Um aluno do 5º ano apresenta dificuldades de leitura e está desmotivado com as aulas. Os colegas começam a excluí-lo de atividades em grupo. Como você interviria?",
+    "answer": "1. Realizar avaliação diagnóstica para mapear as dificuldades específicas.\n2. Criar um plano de intervenção individualizado com atividades de leitura graduais.\n3. Promover dinâmicas de grupo cooperativo que valorizem diferentes habilidades.\n4. Estabelecer comunicação com a família para suporte em casa.\n5. Usar reforço positivo para celebrar progressos, mesmo pequenos.",
+    "type": "cenario_problema"
+  },
+  {
+    "question": "Você percebe que uma turma do 3º ano tem grande disparidade no nível de aprendizado de matemática. Alguns alunos dominam operações básicas enquanto outros ainda não compreendem o conceito de dezena. Como planejar aulas inclusivas?",
+    "answer": "1. Aplicar sondagem para identificar os níveis de cada aluno.\n2. Organizar estações de aprendizagem com atividades em diferentes níveis.\n3. Utilizar tutoria entre pares (alunos mais avançados auxiliam os demais).\n4. Implementar materiais concretos (material dourado, ábaco) para alunos em nível inicial.\n5. Oferecer atividades de extensão desafiadoras para alunos avançados.\n6. Registrar e acompanhar o progresso individual semanalmente.",
+    "type": "cenario_problema"
+  },
+  {
+    "question": "Durante o conselho de classe, você identifica que vários professores relatam problemas de indisciplina na mesma turma do 7º ano. O que propor como ação coletiva?",
+    "answer": "1. Alinhar combinados de convivência comuns entre todos os professores da turma.\n2. Realizar assembleia de classe para ouvir os alunos sobre suas percepções.\n3. Mapear os momentos/disciplinas de maior ocorrência e buscar padrões.\n4. Implementar projeto interdisciplinar que engaje os interesses da turma.\n5. Estabelecer canal de comunicação entre professores para monitoramento conjunto.",
+    "type": "cenario_problema"
+  },
+  {
+    "question": "Elabore um plano de aula usando metodologia ativa para ensinar frações no 4º ano.",
+    "answer": "Objetivo: Compreender frações como partes de um todo.\n\n1. Dividir a turma em grupos de 4 alunos.\n2. Distribuir pizzas de papel para cada grupo recortar em partes iguais.\n3. Solicitar que representem frações pedidas (1/2, 1/4, 3/4).\n4. Cada grupo apresenta suas descobertas para a turma.\n5. Registro individual no caderno com desenhos e notação fracionária.\n6. Atividade de consolidação: resolver problemas do cotidiano envolvendo frações.",
+    "type": "acao_pratica"
+  },
+  {
+    "question": "Organize uma roda de conversa sobre bullying para uma turma do 6º ano.",
+    "answer": "Preparação:\n1. Selecionar vídeo curto sobre empatia e convivência escolar.\n2. Preparar fichas com situações-problema anônimas.\n\nDesenvolvimento:\n1. Assistir ao vídeo e abrir espaço para impressões iniciais.\n2. Distribuir fichas e pedir que grupos discutam cada cenário.\n3. Cada grupo compartilha suas reflexões e propostas de ação.\n4. Construir coletivamente um 'Mural de Compromissos' da turma.\n5. Fixar o mural na sala e revisitá-lo periodicamente.",
+    "type": "acao_pratica"
+  },
+  {
+    "question": "Crie uma atividade de avaliação diagnóstica para verificar os conhecimentos prévios de uma turma nova do 1º ano sobre letramento.",
+    "answer": "Atividades diagnósticas sugeridas:\n1. Pedir que escrevam o próprio nome.\n2. Apresentar figuras e pedir que identifiquem a letra inicial.\n3. Ler uma história curta e pedir que recontem oralmente.\n4. Apresentar palavras e figuras para associação.\n5. Oferecer letras do alfabeto para organização em ordem.\n\nRegistro:\n- Usar ficha individual de observação.\n- Classificar em hipóteses de escrita (pré-silábica, silábica, silábico-alfabética, alfabética).\n- Anotar observações sobre oralidade e compreensão textual.",
+    "type": "acao_pratica"
+  }
+]
