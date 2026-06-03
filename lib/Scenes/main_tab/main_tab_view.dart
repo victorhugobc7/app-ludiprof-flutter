@@ -30,13 +30,12 @@ class _MainTabViewState extends State<MainTabView> {
     return Scaffold(
       body: LiquidGlassView(
         backgroundWidget: _pages[_currentIndex],
-        realTimeCapture: _currentIndex == 0,
+        realTimeCapture: true,
         children: [
           LiquidGlassBottomNavBar(
             width: navBarWidth,
             height: 64,
             bottomMargin: MediaQuery.of(context).padding.bottom + 16,
-            distortion: 0.4,
             items: const [
               LiquidGlassTabBarItem(
                 icon: Icons.menu_book_outlined,
@@ -64,6 +63,7 @@ class _MainTabViewState extends State<MainTabView> {
             selectionColor: AppColors.primary.withValues(alpha: 0.30),
             selectedItemColor: AppColors.textPrimary,
             unselectedItemColor: AppColors.textSecondary,
+            glassColor: AppColors.primary.withValues(alpha: 0.25),
           ),
         ],
       ),

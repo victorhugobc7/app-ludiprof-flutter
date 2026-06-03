@@ -86,91 +86,93 @@ class _HomeViewState extends State<HomeView> {
           // ── Foreground Topics Card ──
           SafeArea(
             bottom: false,
-            child: Column(
-              children: [
-                // Spacer pushes the foreground down, leaving the top of the banner visible
-                const SizedBox(height: 240),
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, -4),
-                        ),
-                      ],
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 20, top: 24, bottom: 12),
-                          child: Text(
-                            'Revisar temas especificos',
-                            style: AppTypography.heading3,
+            child: Padding(padding: EdgeInsetsGeometry.symmetric(horizontal: 3, vertical: 0),
+              child: Column(
+                children: [
+                  // Spacer pushes the foreground down, leaving the top of the banner visible
+                  const SizedBox(height: 240),
+                  Expanded(
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 10,
+                            offset: const Offset(0, -4),
                           ),
-                        ),
-                        Expanded(
-                          child: decks.isEmpty
-                              ? Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(32),
-                                    child: Text(
-                                      'Nenhum deck ainda.\nCrie um para comecar!',
-                                      textAlign: TextAlign.center,
-                                      style: AppTypography.bodySmall,
-                                    ),
-                                  ),
-                                )
-                              : ListView.separated(
-                                  physics: const BouncingScrollPhysics(),
-                                  padding: const EdgeInsets.only(top: 4, bottom: 8),
-                                  itemCount: decks.length,
-                                  separatorBuilder: (_, _) => const Divider(
-                                    color: Color(0xFFBDBDBD),
-                                    height: 1,
-                                    indent: 16,
-                                    endIndent: 16,
-                                  ),
-                                  itemBuilder: (context, index) {
-                                    final item = decks[index];
-                                    return _TopicTile(
-                                      name: item.deck.name,
-                                      count: item.cardCount,
-                                      onTap: () =>
-                                          AppCoordinator().goToFlashcards(item.deck.id),
-                                    );
-                                  },
-                                ),
-                        ),
-                        // ── Separator dash ──
-                        Center(
-                          child: Container(
-                            width: 40,
-                            height: 4,
-                            margin: const EdgeInsets.only(top: 4, bottom: 8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFBDBDBD),
-                              borderRadius: BorderRadius.circular(2),
+                        ],
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 20, top: 24, bottom: 12),
+                            child: Text(
+                              'Revisar tópicos',
+                              style: AppTypography.heading3,
                             ),
                           ),
-                        ),
-                        // ── Glass "+" button pinned at bottom ──
-                        Align(
-                          alignment: Alignment.center,
-                          child: _buildGlassAddButton(),
-                        ),
-                        const SizedBox(height: 100), // Space for bottom navbar
-                      ],
+                          Expanded(
+                            child: decks.isEmpty
+                                ? Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(32),
+                                      child: Text(
+                                        'Nenhum deck ainda.\nCrie um para comecar!',
+                                        textAlign: TextAlign.center,
+                                        style: AppTypography.bodySmall,
+                                      ),
+                                    ),
+                                  )
+                                : ListView.separated(
+                                    physics: const BouncingScrollPhysics(),
+                                    padding: const EdgeInsets.only(top: 4, bottom: 8),
+                                    itemCount: decks.length,
+                                    separatorBuilder: (_, _) => const Divider(
+                                      color: Color(0xFFBDBDBD),
+                                      height: 1,
+                                      indent: 16,
+                                      endIndent: 16,
+                                    ),
+                                    itemBuilder: (context, index) {
+                                      final item = decks[index];
+                                      return _TopicTile(
+                                        name: item.deck.name,
+                                        count: item.cardCount,
+                                        onTap: () =>
+                                            AppCoordinator().goToFlashcards(item.deck.id),
+                                      );
+                                    },
+                                  ),
+                          ),
+                          // ── Separator dash ──
+                          Center(
+                            child: Container(
+                              width: 40,
+                              height: 4,
+                              margin: const EdgeInsets.only(top: 4, bottom: 8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFBDBDBD),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                          ),
+                          // ── Glass "+" button pinned at bottom ──
+                          Align(
+                            alignment: Alignment.center,
+                            child: _buildGlassAddButton(),
+                          ),
+                          const SizedBox(height: 100), // Space for bottom navbar
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
 
