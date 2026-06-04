@@ -30,6 +30,16 @@ class FlashcardViewModel extends ChangeNotifier {
   /// The most recent gamification result, used to show achievement toasts.
   GamificationResult? lastResult;
 
+  // ─── Session stats ─────────────────────────────────────────
+  int _sessionXp = 0;
+  final List<GamificationBadge> _sessionBadges = [];
+  /// Per-deckId card count reviewed during this session.
+  final Map<String, int> _topicReviewCounts = {};
+
+  int _sessionCorrectCount = 0;
+  int _sessionIncorrectCount = 0;
+  final Map<String, Map<String, dynamic>> _pendingFsrsUpdates = {};
+
   FlashcardViewModel({
     required this.deckId,
     required CardRepository cardRepo,
@@ -50,6 +60,12 @@ class FlashcardViewModel extends ChangeNotifier {
   String get progress => '${_currentIndex + 1}/${_deck.length}';
   int get currentIndex => _currentIndex;
   int get totalCards => _deck.length;
+  int get sessionXp => _sessionXp;
+  List<GamificationBadge> get sessionBadges => List.unmodifiable(_sessionBadges);
+  /// The cards in this deck, used for building topic breakdown.
+  List<FlashcardItem> get deckCards => List.unmodifiable(_deck);
+  /// Per-deckId review counts for the topic breakdown.
+  Map<String, int> get topicReviewCounts => Map.unmodifiable(_topicReviewCounts);
 
   // ─── Deck loading ──────────────────────────────────────────
 
@@ -102,10 +118,10 @@ class FlashcardViewModel extends ChangeNotifier {
     final result = _scheduler.reviewCard(fsrsCard, rating);
     _fsrsCards[card.id] = result.card;
 
-    // Persist FSRS data
-    await _cardRepo.updateFsrsData(card.id, result.card.toMap());
+    // Queue FSRS data for batch update
+    _pendingFsrsUpdates[card.id] = result.card.toMap();
 
-    // Record analytics
+    // Record analytics (in-memory)
     final isCorrect =
         rating == fsrs.Rating.good || rating == fsrs.Rating.easy;
     _analyticsService.recordReview(
@@ -113,10 +129,16 @@ class FlashcardViewModel extends ChangeNotifier {
       cardTypeKey: card.cardType.jsonKey,
     );
 
-    // Record gamification
-    lastResult = await _gamificationService.recordCardReviewed(
-      isCorrect: isCorrect,
-    );
+    // Queue gamification
+    if (isCorrect) {
+      _sessionCorrectCount++;
+    } else {
+      _sessionIncorrectCount++;
+    }
+
+    // Track per-deck topic count
+    _topicReviewCounts[card.deckId] =
+        (_topicReviewCounts[card.deckId] ?? 0) + 1;
 
     // Advance to next card
     _isFlipped = false;
@@ -162,11 +184,39 @@ class FlashcardViewModel extends ChangeNotifier {
   Future<void> finishSession() async {
     if (!_analyticsService.hasActiveSession) return;
 
-    await _analyticsService.endSession();
+    // 1. Batch save all FSRS scheduling
+    if (_pendingFsrsUpdates.isNotEmpty) {
+      await _cardRepo.updateFsrsDataBatch(_pendingFsrsUpdates);
+    }
+
+    // 2. Batch calculate Gamification XP & Badges
+    lastResult = await _gamificationService.recordSessionReviews(
+      correctCount: _sessionCorrectCount,
+      incorrectCount: _sessionIncorrectCount,
+    );
+    if (lastResult != null) {
+      _sessionXp += lastResult!.xpGained;
+      if (lastResult!.hasNewBadges) {
+        _sessionBadges.addAll(lastResult!.newBadges);
+      }
+    }
 
     // If all cards were reviewed, record deck completion
     if (_currentIndex >= _deck.length && _deck.isNotEmpty) {
-      lastResult = await _gamificationService.recordDeckCompleted();
+      final deckResult = await _gamificationService.recordDeckCompleted();
+      _sessionXp += deckResult.xpGained;
+      if (deckResult.hasNewBadges) {
+        _sessionBadges.addAll(deckResult.newBadges);
+      }
+      lastResult = deckResult;
     }
+
+    // 3. End Analytics Session
+    await _analyticsService.endSession();
+
+    // Clear pending
+    _pendingFsrsUpdates.clear();
+    _sessionCorrectCount = 0;
+    _sessionIncorrectCount = 0;
   }
 }

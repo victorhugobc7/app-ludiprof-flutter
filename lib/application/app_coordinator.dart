@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:app_ludiprof/Scenes/flashcard/flashcard_view.dart';
 import 'package:app_ludiprof/Scenes/main_tab/main_tab_view.dart';
 import 'package:app_ludiprof/Scenes/onboarding/onboarding_view.dart';
-import 'package:app_ludiprof/Scenes/deck/deck_selection_view.dart';
 import 'package:app_ludiprof/Scenes/creator/card_creator_view.dart';
 import 'package:app_ludiprof/Scenes/creator/deck_creator_view.dart';
 import 'package:app_ludiprof/Scenes/creator/roadmap_creator_view.dart';
-import 'package:app_ludiprof/Scenes/roadmap/roadmap_view.dart';
 import 'package:app_ludiprof/Scenes/dashboard/dashboard_view.dart';
 import 'package:app_ludiprof/Scenes/profile/profile_view.dart';
 import 'package:app_ludiprof/Scenes/creator/integrated_flow_view.dart';
@@ -42,12 +40,6 @@ class AppCoordinator {
     );
   }
 
-  void goToDeckSelection() {
-    navigatorKey.currentState?.push(
-      MaterialPageRoute(builder: (context) => const DeckSelectionView()),
-    );
-  }
-
   void goToCardCreator() {
     navigatorKey.currentState?.push(
       MaterialPageRoute(builder: (context) => const CardCreatorView()),
@@ -63,12 +55,6 @@ class AppCoordinator {
   void goToIntegratedFlow() {
     navigatorKey.currentState?.push(
       MaterialPageRoute(builder: (context) => const IntegratedFlowView()),
-    );
-  }
-
-  void goToRoadmaps() {
-    navigatorKey.currentState?.push(
-      MaterialPageRoute(builder: (context) => const RoadmapView()),
     );
   }
 

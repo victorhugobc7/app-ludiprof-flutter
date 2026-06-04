@@ -86,7 +86,8 @@ class _HomeViewState extends State<HomeView> {
           // ── Foreground Topics Card ──
           SafeArea(
             bottom: false,
-            child: Padding(padding: EdgeInsetsGeometry.symmetric(horizontal: 3, vertical: 0),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Column(
                 children: [
                   // Spacer pushes the foreground down, leaving the top of the banner visible
@@ -95,8 +96,8 @@ class _HomeViewState extends State<HomeView> {
                     child: Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                        color: Colors.white.withValues(alpha: 0.95),
+                        borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(alpha: 0.1),
@@ -149,24 +150,13 @@ class _HomeViewState extends State<HomeView> {
                                     },
                                   ),
                           ),
-                          // ── Separator dash ──
-                          Center(
-                            child: Container(
-                              width: 40,
-                              height: 4,
-                              margin: const EdgeInsets.only(top: 4, bottom: 8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFBDBDBD),
-                                borderRadius: BorderRadius.circular(2),
-                              ),
-                            ),
-                          ),
+                          
                           // ── Glass "+" button pinned at bottom ──
                           Align(
                             alignment: Alignment.center,
                             child: _buildGlassAddButton(),
                           ),
-                          const SizedBox(height: 100), // Space for bottom navbar
+                          const SizedBox(height: 100),
                         ],
                       ),
                     ),
@@ -186,7 +176,7 @@ class _HomeViewState extends State<HomeView> {
               behavior: HitTestBehavior.opaque,
               onTap: () {
                 // General review — study all decks
-                AppCoordinator().goToDeckSelection();
+                AppCoordinator().goToFlashcards("");
               },
               child: SafeArea(
                 bottom: false,

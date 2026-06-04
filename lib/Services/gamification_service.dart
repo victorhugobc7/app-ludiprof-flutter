@@ -72,6 +72,8 @@ class GamificationService extends ChangeNotifier {
     return _progress;
   }
 
+  UserProgress get currentProgress => _progress;
+
   /// Ativa um multiplicador 3x de XP pelos próximos [minutes] minutos.
   void activateStudyBuff({int minutes = 10}) {
     _xpBuffEndTime = DateTime.now().add(Duration(minutes: minutes));
@@ -281,5 +283,56 @@ class GamificationService extends ChangeNotifier {
 
   Future<GamificationResult> recordSessionCompleted() async {
     return _recordEvent('session_completed', 30);
+  }
+
+  Future<GamificationResult> recordSessionReviews({required int correctCount, required int incorrectCount}) async {
+    _updateStreakOnAction();
+
+    int xpAmount = (correctCount * 2) + (incorrectCount * 2);
+    if (isBuffActive) {
+      xpAmount *= 3;
+    }
+
+    int newTotalXp = _progress.totalXp + xpAmount;
+    int newCurrentXp = _progress.currentXp + xpAmount;
+    int newLevel = _progress.level;
+    int newNextLevelXp = _progress.nextLevelXp;
+    bool leveledUp = false;
+
+    while (newCurrentXp >= newNextLevelXp) {
+      newCurrentXp -= newNextLevelXp;
+      newLevel++;
+      newNextLevelXp = newLevel * 100;
+      leveledUp = true;
+    }
+
+    final newEventCounts = Map<String, int>.from(_progress.eventCounts);
+    if (correctCount > 0) {
+      newEventCounts['card_correct'] = (newEventCounts['card_correct'] ?? 0) + correctCount;
+    }
+    final totalReviewed = correctCount + incorrectCount;
+    if (totalReviewed > 0) {
+      newEventCounts['card_reviewed'] = (newEventCounts['card_reviewed'] ?? 0) + totalReviewed;
+    }
+
+    _progress = _progress.copyWith(
+      totalXp: newTotalXp,
+      currentXp: newCurrentXp,
+      level: newLevel,
+      nextLevelXp: newNextLevelXp,
+      eventCounts: newEventCounts,
+    );
+
+    final newBadges = _checkBadges();
+
+    await _saveProgress();
+
+    return GamificationResult(
+      xpGained: xpAmount,
+      leveledUp: leveledUp,
+      hasNewBadges: newBadges.isNotEmpty,
+      newBadges: newBadges,
+      progress: _progress,
+    );
   }
 }

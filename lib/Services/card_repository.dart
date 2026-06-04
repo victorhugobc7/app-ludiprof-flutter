@@ -10,6 +10,7 @@ class CardRepository extends ChangeNotifier {
     final allCards = StorageService.cardsBox.values
         .map((raw) => FlashcardItem.fromMap(Map<dynamic, dynamic>.from(raw as Map)))
         .toList();
+    if (deckId.isEmpty) return allCards;
     return allCards.where((c) => c.deckId == deckId).toList();
   }
 
@@ -43,7 +44,33 @@ class CardRepository extends ChangeNotifier {
     await StorageService.cardsBox.put(cardId, updated.toMap());
     
     // Update notifications schedule
-    await NotificationService().scheduleNextReviewNotification(this);
+    try {
+      await NotificationService().scheduleNextReviewNotification(this);
+    } catch (e) {
+      debugPrint('Failed to schedule notification: $e');
+    }
+  }
+
+  /// Updates the FSRS scheduling data for multiple cards in batch.
+  Future<void> updateFsrsDataBatch(Map<String, Map<String, dynamic>> batchData) async {
+    for (final entry in batchData.entries) {
+      final cardId = entry.key;
+      final fsrsData = entry.value;
+      
+      final raw = StorageService.cardsBox.get(cardId);
+      if (raw != null) {
+        final updated = FlashcardItem.fromMap(Map<dynamic, dynamic>.from(raw as Map));
+        updated.fsrsData = fsrsData;
+        await StorageService.cardsBox.put(cardId, updated.toMap());
+      }
+    }
+    
+    // Update notifications schedule ONCE
+    try {
+      await NotificationService().scheduleNextReviewNotification(this);
+    } catch (e) {
+      debugPrint('Failed to schedule notification: $e');
+    }
   }
 
   /// Marks a practical-action card as task-completed.

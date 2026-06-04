@@ -1,69 +1,104 @@
 import 'package:flutter/material.dart';
-import 'package:app_ludiprof/Models/study_session.dart';
-import 'package:app_ludiprof/Models/card_type.dart';
 import 'package:app_ludiprof/Services/analytics_service.dart';
+import 'package:app_ludiprof/Services/card_repository.dart';
+import 'package:app_ludiprof/Services/deck_repository.dart';
+import 'package:app_ludiprof/Services/gamification_service.dart';
 
-/// ViewModel for the performance dashboard.
-///
-/// Aggregates analytics data for charts and knowledge gap analysis.
+/// ViewModel for the simplified performance dashboard.
 class DashboardViewModel extends ChangeNotifier {
   final AnalyticsService _analyticsService;
+  final CardRepository _cardRepo;
+  final DeckRepository _deckRepo;
+  final GamificationService _gamificationService;
 
   DashboardViewModel({
     required AnalyticsService analyticsService,
-  })  : _analyticsService = analyticsService;
+    required CardRepository cardRepo,
+    required DeckRepository deckRepo,
+    required GamificationService gamificationService,
+  })  : _analyticsService = analyticsService,
+        _cardRepo = cardRepo,
+        _deckRepo = deckRepo,
+        _gamificationService = gamificationService;
 
-  /// Session history for charts.
-  List<StudySession> getRecentSessions({int days = 30}) {
-    return _analyticsService.getSessionHistory(days: days);
-  }
-
-  /// Total cards reviewed across all sessions.
+  int get streak => _gamificationService.currentProgress.streakDays;
+  
   int get totalCardsReviewed => _analyticsService.getTotalCardsReviewed();
 
-  /// Total study time in minutes.
-  int get totalStudyTimeMinutes =>
-      (_analyticsService.getTotalStudyTimeMs() / 60000).round();
-
-  /// Overall accuracy rate (0.0 to 1.0).
-  double get overallAccuracy {
-    final sessions = _analyticsService.getSessionHistory();
-    if (sessions.isEmpty) return 0.0;
-    int totalCorrect = 0;
-    int totalReviewed = 0;
-    for (final session in sessions) {
-      totalCorrect += session.correctCount;
-      totalReviewed += session.cardsReviewed;
+  int get cardsMemorizados {
+    int count = 0;
+    for (final card in _cardRepo.getAllCards()) {
+      final reps = card.fsrsData['reps'] as int? ?? 0;
+      if (reps >= 2) {
+        count++;
+      }
     }
-    if (totalReviewed == 0) return 0.0;
-    return totalCorrect / totalReviewed;
+    return count;
   }
 
-  /// Accuracy breakdown by card type.
-  Map<CardType, double> get accuracyByCardType =>
-      _analyticsService.getAccuracyByCardType();
-
-  /// Daily session counts for the last N days (for the activity chart).
-  Map<DateTime, int> getDailyActivity({int days = 30}) {
-    final sessions = _analyticsService.getSessionHistory(days: days);
-    final Map<DateTime, int> daily = {};
-    for (final session in sessions) {
-      final dateKey = DateTime(
-        session.sessionDate.year,
-        session.sessionDate.month,
-        session.sessionDate.day,
-      );
-      daily[dateKey] = (daily[dateKey] ?? 0) + 1;
+  String get topicoMaisFamiliar {
+    final decks = _deckRepo.getAllDecks();
+    if (decks.isEmpty) return 'Nenhum';
+    
+    String bestDeckName = 'Nenhum';
+    double bestAverageReps = -1.0;
+    
+    for (final deck in decks) {
+      final cards = _cardRepo.getCardsForDeck(deck.id);
+      if (cards.isEmpty) continue;
+      
+      int totalReps = 0;
+      for (final card in cards) {
+         totalReps += (card.fsrsData['reps'] as int? ?? 0);
+      }
+      final avg = totalReps / cards.length;
+      if (avg > bestAverageReps) {
+        bestAverageReps = avg;
+        bestDeckName = deck.title;
+      }
     }
-    return daily;
+    
+    return bestAverageReps > 0 ? bestDeckName : 'Nenhum';
   }
 
-  /// Daily cards reviewed for chart data.
+  int get quantTopicosDominados {
+    final decks = _deckRepo.getAllDecks();
+    int dominados = 0;
+    
+    for (final deck in decks) {
+      final cards = _cardRepo.getCardsForDeck(deck.id);
+      if (cards.isEmpty) continue;
+      
+      bool isDominated = true;
+      bool hasReviewedCard = false;
+      
+      for (final card in cards) {
+        final reps = card.fsrsData['reps'] as int? ?? 0;
+        final lapses = card.fsrsData['lapses'] as int? ?? 0;
+        
+        if (reps > 0) {
+           hasReviewedCard = true;
+        }
+        
+        // If any card hasn't reached 5 reps or has lapses, it's not dominated
+        if (reps < 5 || lapses > 0) {
+          isDominated = false;
+          break;
+        }
+      }
+      
+      if (hasReviewedCard && isDominated) {
+        dominados++;
+      }
+    }
+    
+    return dominados;
+  }
+
   List<MapEntry<DateTime, int>> getDailyCardsReviewed({int days = 7}) {
     final sessions = _analyticsService.getSessionHistory(days: days);
     final Map<DateTime, int> daily = {};
 
-    // Initialize all days with 0
     final now = DateTime.now();
     for (int i = days - 1; i >= 0; i--) {
       final date = DateTime(now.year, now.month, now.day - i);
@@ -86,15 +121,16 @@ class DashboardViewModel extends ChangeNotifier {
     return entries;
   }
 
-  /// Total sessions count.
-  int get totalSessions => _analyticsService.getSessionHistory().length;
-
-  /// Average accuracy per session for trend.
-  List<double> getAccuracyTrend({int lastN = 10}) {
-    final sessions = _analyticsService.getSessionHistory();
-    final recent = sessions.length > lastN
-        ? sessions.sublist(sessions.length - lastN)
-        : sessions;
-    return recent.map((s) => s.accuracyRate).toList();
+  double get mediaDiariaCards {
+    final data = getDailyCardsReviewed(days: 7);
+    int activeDays = 0;
+    int total = 0;
+    for (var entry in data) {
+      if (entry.value > 0) {
+         activeDays++;
+         total += entry.value;
+      }
+    }
+    return activeDays > 0 ? total / activeDays : 0.0;
   }
 }

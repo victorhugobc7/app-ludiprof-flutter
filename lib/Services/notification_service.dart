@@ -40,6 +40,11 @@ class NotificationService {
 
   Future<void> scheduleNextReviewNotification(CardRepository cardRepo) async {
     if (!_initialized) return;
+    
+    // Notifications are not supported on Windows, gracefully return to avoid console spam.
+    if (defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.linux || defaultTargetPlatform == TargetPlatform.macOS) {
+      return;
+    }
 
     final allCards = cardRepo.getAllCards();
     if (allCards.isEmpty) return;
@@ -82,7 +87,7 @@ class NotificationService {
         id: 0,
         title: 'Hora de Estudar!',
         body: 'Você tem Decks pendentes de revisão. Mantenha sua ofensiva!',
-        scheduledDate: tz.TZDateTime.from(earliestDueDate, tz.local),
+        scheduledDate: tz.TZDateTime.from(earliestDueDate, tz.UTC),
         notificationDetails: platformChannelSpecifics,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       );

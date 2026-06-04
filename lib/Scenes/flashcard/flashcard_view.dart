@@ -1,20 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:flutter/services.dart';
+import 'dart:ui';
 import 'package:fsrs/fsrs.dart' as fsrs;
 import 'package:provider/provider.dart';
+import 'package:liquid_glass_easy/liquid_glass_easy.dart';
+
 import 'package:app_ludiprof/Design System/Components/Gamification/achievement_toast.dart';
-import 'package:app_ludiprof/Design System/Components/Buttons/glass_action_button.dart';
-import 'package:app_ludiprof/Design System/Components/Layout/glass_bottom_bar.dart';
+import 'package:app_ludiprof/Design System/Components/Layout/lottie_progress_bar.dart';
+import 'package:app_ludiprof/Design System/Shared/colors.dart';
+import 'package:app_ludiprof/Design System/Shared/typography.dart';
+import 'package:app_ludiprof/Services/deck_repository.dart';
 
 import 'package:app_ludiprof/Models/card_type.dart';
 import 'package:app_ludiprof/Models/flashcard_item.dart';
 import 'package:app_ludiprof/Services/card_repository.dart';
 import 'package:app_ludiprof/Services/analytics_service.dart';
 import 'package:app_ludiprof/Services/gamification_service.dart';
+import 'package:app_ludiprof/Models/gamification_models.dart';
 import 'package:app_ludiprof/application/app_coordinator.dart';
-import 'package:app_ludiprof/Design System/Components/Inputs/custom_text_input.dart';
 
 import 'flashcard_view_model.dart';
+import 'revision_finished_screen.dart';
 
 /// The main flashcard study screen.
 ///
@@ -32,10 +38,10 @@ class FlashcardView extends StatefulWidget {
 class _FlashcardViewState extends State<FlashcardView> {
   late final FlashcardViewModel _viewModel;
   final ScrollController _scrollController = ScrollController();
-  final TextEditingController _taskController = TextEditingController();
-  
+
   bool _hasReachedBottom = false;
   int _lastIndex = -1;
+  bool _isRating = false; // Prevent double-taps during async rating
 
   @override
   void initState() {
@@ -79,20 +85,38 @@ class _FlashcardViewState extends State<FlashcardView> {
         badges: result.newBadges,
       );
     }
-    
+
     if (_viewModel.currentIndex != _lastIndex && !_viewModel.isFinished) {
       _lastIndex = _viewModel.currentIndex;
       _hasReachedBottom = false;
-      _taskController.clear();
-      
+      _isRating = false;
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted && _scrollController.hasClients) {
+          // Reset scroll position for new card
+          _scrollController.jumpTo(0);
           if (_scrollController.position.maxScrollExtent == 0) {
             setState(() => _hasReachedBottom = true);
           }
         }
       });
     }
+
+    // Unlock rating when finished
+    if (_viewModel.isFinished) {
+      _isRating = false;
+    }
+  }
+
+  Future<void> _handleRating(fsrs.Rating rating) async {
+    if (_isRating) return;
+    setState(() => _isRating = true);
+
+    // Haptic feedback
+    HapticFeedback.mediumImpact();
+
+    await _viewModel.rateCard(rating);
+    // _isRating will be reset in _onViewModelChanged when the card advances
   }
 
   @override
@@ -100,7 +124,6 @@ class _FlashcardViewState extends State<FlashcardView> {
     _viewModel.removeListener(_onViewModelChanged);
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
-    _taskController.dispose();
     // End session if still active
     _viewModel.finishSession();
     _viewModel.dispose();
@@ -110,10 +133,13 @@ class _FlashcardViewState extends State<FlashcardView> {
   @override
   Widget build(BuildContext context) {
     if (_viewModel.isLoading) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Flashcards')),
-        body: const Center(child: CircularProgressIndicator()),
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
       );
+    }
+
+    if (_viewModel.totalCards == 0) {
+      return _buildEmptyScreen();
     }
 
     if (_viewModel.isFinished) {
@@ -123,48 +149,71 @@ class _FlashcardViewState extends State<FlashcardView> {
     return _buildStudyScreen();
   }
 
-  // ─── Finished screen ────────────────────────────────────────
+  // ─── Empty screen (no cards) ────────────────────────────────
 
-  Widget _buildFinishedScreen() {
+  Widget _buildEmptyScreen() {
     return Scaffold(
-      appBar: AppBar(title: const Text('Flashcards')),
+      backgroundColor: AppColors.background,
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: ShadCard(
-            title: const Text(
-              '🎉 Deck Concluído!',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            description: const Text(
-              'Parabéns! Você revisou todos os cards deste deck.',
-            ),
-            child: Padding(
-              padding: const EdgeInsets.only(top: 16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${_viewModel.totalCards} cards revisados',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  const SizedBox(height: 24),
-                  ShadButton(
-                    onPressed: () => AppCoordinator().goToHome(),
-                    size: ShadButtonSize.lg,
-                    child: const Text('Voltar ao Início'),
-                  ),
-                  const SizedBox(height: 12),
-                  ShadButton.outline(
-                    onPressed: _viewModel.reset,
-                    child: const Text('Revisar Novamente'),
-                  ),
-                ],
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.inbox_outlined,
+                size: 64,
+                color: AppColors.textSecondary.withValues(alpha: 0.5),
               ),
-            ),
+              const SizedBox(height: 16),
+              Text(
+                'Nenhum card para revisar',
+                style: AppTypography.heading2,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Crie cards para comecar a estudar!',
+                style: AppTypography.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+              GestureDetector(
+                onTap: () => AppCoordinator().goBack(),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    'Voltar',
+                    style: AppTypography.button,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  // ─── Finished screen ────────────────────────────────────────
+
+  Widget _buildFinishedScreen() {
+    final progress = _viewModel.lastResult?.progress;
+    return RevisionFinishedScreen(
+      totalCards: _viewModel.totalCards,
+      sessionXp: _viewModel.sessionXp,
+      sessionBadges: _viewModel.sessionBadges,
+      topicReviewCounts: _viewModel.topicReviewCounts,
+      progress: progress ?? UserProgress(),
+      onFinish: () => AppCoordinator().goToHome(),
+      onRestart: _viewModel.reset,
     );
   }
 
@@ -172,247 +221,270 @@ class _FlashcardViewState extends State<FlashcardView> {
 
   Widget _buildStudyScreen() {
     final card = _viewModel.currentCard;
-    final isConcept = card.cardType == CardType.conceito;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final navBarWidth = screenWidth - 48;
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
-        title: Text(
-          isConcept ? 'Leitura' : 'Revisão',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, size: 20),
-          onPressed: () => AppCoordinator().goBack(),
-        ),
-      ),
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          Positioned.fill(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              padding: const EdgeInsets.only(
-                top: 24.0,
-                left: 24.0,
-                right: 24.0,
-                bottom: 140.0, // space for bottom bar
+          // Main content
+          Column(
+            children: [
+              // Top safe area + progress bar + back button
+              SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  child: Column(
+                    children: [
+                      // Back button + title row
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              AppCoordinator().goBack();
+                            },
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: AppColors.textSecondary.withValues(alpha: 0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.arrow_back_ios_new,
+                                size: 16,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ),
+                          const Expanded(
+                            child: Center(
+                              child: Text(
+                                'Revisão',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 36), // Balance the back button
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      // Progress bar
+                      LottieProgressBar(
+                        current: _viewModel.currentIndex,
+                        total: _viewModel.totalCards,
+                        height: 16,
+                      ),
+                    ],
+                  ),
+                ),
               ),
-              child: _buildCardContent(card),
+
+              // Card content area
+              Expanded(
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.only(
+                    top: 24,
+                    left: 24,
+                    right: 24,
+                    bottom: 140,
+                  ),
+                  child: _buildCardContent(card),
+                ),
+              ),
+            ],
+          ),
+
+          // Rating bar fixed at bottom
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: _buildRatingBar(card, navBarWidth),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Glass bottom rating bar ────────────────────────
+
+  Widget _buildRatingBar(FlashcardItem card, double barWidth) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom + 16;
+    Widget barContent;
+
+    if (!_viewModel.isFlipped) {
+      barContent = _buildSingleActionBar(
+        label: 'Exibir resposta',
+        icon: Icons.visibility,
+        onTap: () {
+          HapticFeedback.lightImpact();
+          _viewModel.flipCard();
+        },
+      );
+    } else {
+      barContent = _buildRatingButtons();
+    }
+
+    return Container(
+      margin: EdgeInsets.only(bottom: bottomPadding),
+      width: barWidth,
+      height: 64,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(50),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(50),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.5),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
+            child: Center(child: barContent),
           ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: _buildBottomButtons(card),
-          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSingleActionBar({
+    required String label,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: _isRating ? null : onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                color: Color(0xFFE1F5FE),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: AppColors.textPrimary, size: 16),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: AppTypography.body.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRatingButtons() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _ratingButton('Errei', const Color(0xFFE53935), fsrs.Rating.again),
+          _ratingButton('Dificil', const Color(0xFFFF9800), fsrs.Rating.hard),
+          _ratingButton('Bom', const Color(0xFF42A5F5), fsrs.Rating.good),
+          _ratingButton('Facil', const Color(0xFF66BB6A), fsrs.Rating.easy),
         ],
       ),
     );
   }
 
   Widget _buildCardContent(FlashcardItem card) {
-    switch (card.cardType) {
-      case CardType.conceito:
-        return _buildConceptCard(card);
-      case CardType.cenarioProblema:
-        return _buildScenarioCard(card);
-      case CardType.acaoPratica:
-        return _buildActionCard(card);
-    }
+    return _buildStandardCard(card);
   }
 
-  Widget _buildConceptCard(FlashcardItem card) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          card.question,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          card.answer,
-          style: const TextStyle(fontSize: 18, color: Colors.black87, height: 1.5),
-        ),
-      ],
-    );
-  }
+  Widget _buildStandardCard(FlashcardItem card) {
+    final deckRepo = context.read<DeckRepository>();
+    final deckName = deckRepo.getDeck(_viewModel.deckId)?.name ?? 'Revisão';
 
-  Widget _buildScenarioCard(FlashcardItem card) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Text(
-          'UX/UI',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey,
+        Text(
+          deckName.toUpperCase(),
+          style: AppTypography.caption.copyWith(
             letterSpacing: 1.2,
+            color: AppColors.textSecondary,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           card.question,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+          style: AppTypography.cardQuestion.copyWith(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
           textAlign: TextAlign.center,
         ),
         if (_viewModel.isFlipped) ...[
           const SizedBox(height: 32),
           Text(
             card.answer,
-            style: const TextStyle(fontSize: 18, color: Colors.black87, height: 1.5),
+            style: AppTypography.body.copyWith(
+              height: 1.6,
+              fontSize: 18,
+            ),
             textAlign: TextAlign.center,
           ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildActionCard(FlashcardItem card) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        const Text(
-          'Tarefa',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.green,
-            letterSpacing: 1.2,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          card.question,
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 32),
-        if (card.isTaskCompleted) ...[
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.check_circle, color: Colors.green),
-              SizedBox(width: 8),
-              Text(
-                'Tarefa Concluída',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.green,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (card.answer.isNotEmpty)
-            Text(
-              card.answer,
-              style: const TextStyle(fontSize: 16, color: Colors.black87),
-              textAlign: TextAlign.center,
-            ),
         ] else ...[
-          CustomTextInput(
-            controller: _taskController,
-            placeholder: 'O que você fez nesta tarefa?',
-            minLines: 4,
-            maxLines: 8,
+          const SizedBox(height: 48),
+          Text(
+            '...',
+            style: AppTypography.heading1.copyWith(
+              color: AppColors.textPrimary,
+              fontSize: 32,
+            ),
           ),
-        ]
+        ],
       ],
     );
   }
 
-  Widget _buildBottomButtons(FlashcardItem card) {
-    if (card.cardType == CardType.conceito) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 32),
-        child: Center(
-          child: GlassActionButton(
-            label: 'Concluir',
-            icon: Icons.check,
-            onPressed: () {
-              if (_hasReachedBottom) {
-                _viewModel.rateCard(fsrs.Rating.good);
-              } else {
-                if (_scrollController.hasClients) {
-                  _scrollController.animateTo(
-                    _scrollController.position.maxScrollExtent,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                  );
-                }
-              }
-            },
-          ),
-        ),
-      );
-    }
-    
-    if (card.cardType == CardType.acaoPratica && !card.isTaskCompleted) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 32),
-        child: Center(
-          child: GlassActionButton(
-            label: 'Salvar e Concluir',
-            icon: Icons.check,
-            onPressed: () {
-              _viewModel.markCurrentTaskCompleted(_taskController.text);
-            },
-          ),
-        ),
-      );
-    }
+  // ─── Rating button ──────────────────────────────────────────
 
-    if (!_viewModel.isFlipped) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 32),
-        child: Center(
-          child: GlassActionButton(
-            label: 'Exibir resposta',
-            icon: Icons.visibility,
-            onPressed: _viewModel.flipCard,
-          ),
-        ),
-      );
-    }
-
-    return GlassBottomBar(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _ratingButton('Errei', Colors.red.shade50, Colors.red.shade700, fsrs.Rating.again),
-          _ratingButton('Difícil', Colors.orange.shade50, Colors.orange.shade700, fsrs.Rating.hard),
-          _ratingButton('Bom', Colors.blue.shade50, Colors.blue.shade700, fsrs.Rating.good),
-          _ratingButton('Fácil', Colors.green.shade50, Colors.green.shade700, fsrs.Rating.easy),
-        ],
-      ),
-    );
-  }
-
-  Widget _ratingButton(String label, Color bgColor, Color textColor, fsrs.Rating rating) {
+  Widget _ratingButton(String label, Color accentColor, fsrs.Rating rating) {
     return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: InkWell(
-          onTap: () => _viewModel.rateCard(rating),
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: textColor,
-                fontWeight: FontWeight.bold,
-              ),
+      child: GestureDetector(
+        onTap: _isRating ? null : () => _handleRating(rating),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE1F5FE), // light cyan background
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
           ),
         ),
