@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:app_ludiprof/Models/gamification_models.dart';
 import 'package:app_ludiprof/Services/analytics_service.dart';
 import 'package:app_ludiprof/Services/card_repository.dart';
 import 'package:app_ludiprof/Services/deck_repository.dart';
@@ -22,6 +23,9 @@ class DashboardViewModel extends ChangeNotifier {
         _gamificationService = gamificationService;
 
   int get streak => _gamificationService.currentProgress.streakDays;
+
+  // Expose progress for XP bar
+  UserProgress get progress => _gamificationService.currentProgress;
   
   int get totalCardsReviewed => _analyticsService.getTotalCardsReviewed();
 
@@ -44,7 +48,7 @@ class DashboardViewModel extends ChangeNotifier {
     double bestAverageReps = -1.0;
     
     for (final deck in decks) {
-      final cards = _cardRepo.getCardsForDeck(deck.id);
+      final cards = _cardRepo.getCardsByDeck(deck.id);
       if (cards.isEmpty) continue;
       
       int totalReps = 0;
@@ -54,7 +58,7 @@ class DashboardViewModel extends ChangeNotifier {
       final avg = totalReps / cards.length;
       if (avg > bestAverageReps) {
         bestAverageReps = avg;
-        bestDeckName = deck.title;
+        bestDeckName = deck.name;
       }
     }
     
@@ -66,7 +70,7 @@ class DashboardViewModel extends ChangeNotifier {
     int dominados = 0;
     
     for (final deck in decks) {
-      final cards = _cardRepo.getCardsForDeck(deck.id);
+      final cards = _cardRepo.getCardsByDeck(deck.id);
       if (cards.isEmpty) continue;
       
       bool isDominated = true;

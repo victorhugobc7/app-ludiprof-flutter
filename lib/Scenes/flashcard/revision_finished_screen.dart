@@ -220,7 +220,7 @@ class _RevisionFinishedScreenState extends State<RevisionFinishedScreen>
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'Parabens!',
+                      'Parabéns!',
                       style: AppTypography.heading1,
                     ),
                     const SizedBox(height: 4),

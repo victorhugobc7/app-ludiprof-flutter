@@ -143,6 +143,11 @@ class FlashcardViewModel extends ChangeNotifier {
     // Advance to next card
     _isFlipped = false;
     _currentIndex++;
+    
+    if (isFinished) {
+      await finishSession();
+    }
+    
     notifyListeners();
   }
 

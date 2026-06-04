@@ -151,7 +151,113 @@ class _FlashcardViewState extends State<FlashcardView> {
 
   // ─── Empty screen (no cards) ────────────────────────────────
 
+  List<String> _getRecommendedDecks(BuildContext context) {
+    final deckRepo = context.read<DeckRepository>();
+    final cardRepo = context.read<CardRepository>();
+    final decks = deckRepo.getAllDecks();
+    
+    final List<Map<String, dynamic>> deckScores = [];
+    
+    for (final deck in decks) {
+      final cards = cardRepo.getCardsByDeck(deck.id);
+      if (cards.isEmpty) continue;
+      
+      double difficultyScore = 0;
+      for (final card in cards) {
+        final difficulty = (card.fsrsData['difficulty'] as num?)?.toDouble() ?? 5.0;
+        final lapses = (card.fsrsData['lapses'] as int?) ?? 0;
+        difficultyScore += difficulty + (lapses * 2);
+      }
+      difficultyScore /= cards.length;
+      
+      deckScores.add({
+        'name': deck.name,
+        'score': difficultyScore,
+      });
+    }
+    
+    deckScores.sort((a, b) => (b['score'] as double).compareTo(a['score'] as double));
+    return deckScores.take(3).map((e) => e['name'] as String).toList();
+  }
+
   Widget _buildEmptyScreen() {
+    final hasAnyCards = context.read<CardRepository>().getAllCards().isNotEmpty;
+    
+    if (hasAnyCards) {
+      final recommended = _getRecommendedDecks(context);
+      
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.textPrimary, width: 2),
+                  ),
+                  child: const Icon(
+                    Icons.check,
+                    size: 64,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  'Revisão completa',
+                  style: AppTypography.heading1,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Recomendamos um dos tópicos abaixo para estudo focado',
+                  style: AppTypography.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 32),
+                ...recommended.map((topic) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Text(
+                    topic,
+                    style: AppTypography.body.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                )),
+                const SizedBox(height: 48),
+                GestureDetector(
+                  onTap: () => AppCoordinator().goBack(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 48,
+                      vertical: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.textPrimary, width: 2),
+                    ),
+                    child: Text(
+                      'Retornar',
+                      style: AppTypography.button.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Center(
@@ -420,7 +526,7 @@ class _FlashcardViewState extends State<FlashcardView> {
 
   Widget _buildStandardCard(FlashcardItem card) {
     final deckRepo = context.read<DeckRepository>();
-    final deckName = deckRepo.getDeck(_viewModel.deckId)?.name ?? 'Revisão';
+    final deckName = deckRepo.getDeck(card.deckId)?.name ?? 'Revisão';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
