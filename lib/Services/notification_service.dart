@@ -31,9 +31,6 @@ class NotificationService {
     // Request permissions for Android 13+
     _flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>()?.requestNotificationsPermission();
-        
-    _flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()?.requestExactAlarmsPermission();
 
     _initialized = true;
   }
@@ -89,7 +86,7 @@ class NotificationService {
         body: 'Você tem Decks pendentes de revisão. Mantenha sua ofensiva!',
         scheduledDate: tz.TZDateTime.from(earliestDueDate, tz.UTC),
         notificationDetails: platformChannelSpecifics,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       );
     }
   }

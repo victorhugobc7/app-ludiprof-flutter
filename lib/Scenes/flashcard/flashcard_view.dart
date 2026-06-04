@@ -332,88 +332,111 @@ class _FlashcardViewState extends State<FlashcardView> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          // Main content
-          Column(
-            children: [
-              // Top safe area + progress bar + back button
-              SafeArea(
-                bottom: false,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                  child: Column(
-                    children: [
-                      // Back button + title row
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              HapticFeedback.lightImpact();
-                              AppCoordinator().goBack();
-                            },
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: AppColors.textSecondary.withValues(alpha: 0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.arrow_back_ios_new,
-                                size: 16,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ),
-                          const Expanded(
-                            child: Center(
-                              child: Text(
-                                'Revisão',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+      body: LiquidGlassView(
+        backgroundWidget: Stack(
+          children: [
+            // Main content
+            Column(
+              children: [
+                // Top safe area + progress bar + back button
+                SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Column(
+                      children: [
+                        // Back button + title row
+                        Row(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                AppCoordinator().goBack();
+                              },
+                              child: Container(
+                                width: 36,
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: AppColors.textSecondary.withValues(alpha: 0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_back_ios_new,
+                                  size: 16,
                                   color: AppColors.textPrimary,
                                 ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 36), // Balance the back button
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      // Progress bar
-                      LottieProgressBar(
-                        current: _viewModel.currentIndex,
-                        total: _viewModel.totalCards,
-                        height: 16,
+                            const Expanded(
+                              child: Center(
+                                child: Text(
+                                  'Revisão',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 36), // Balance the back button
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Progress bar
+                        LottieProgressBar(
+                          current: _viewModel.currentIndex,
+                          total: _viewModel.totalCards,
+                          height: 16,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Card content area
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.only(
+                      top: 24,
+                      left: 24,
+                      right: 24,
+                      bottom: 140,
+                    ),
+                    child: _buildCardContent(card),
+                  ),
+                ),
+              ],
+            ),
+            
+            // Shadow layer placed in the background so it is drawn behind the navbar
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: IgnorePointer(
+                child: Container(
+                  width: navBarWidth,
+                  height: 64,
+                  margin: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom + 16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
                 ),
               ),
-
-              // Card content area
-              Expanded(
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.only(
-                    top: 24,
-                    left: 24,
-                    right: 24,
-                    bottom: 140,
-                  ),
-                  child: _buildCardContent(card),
-                ),
-              ),
-            ],
-          ),
-
-          // Rating bar fixed at bottom
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: _buildRatingBar(card, navBarWidth),
-          ),
+            ),
+          ],
+        ),
+        realTimeCapture: true,
+        refreshRate: LiquidGlassRefreshRate.medium,
+        children: [
+          _buildRatingBar(card, navBarWidth),
         ],
       ),
     );
@@ -421,7 +444,7 @@ class _FlashcardViewState extends State<FlashcardView> {
 
   // ─── Glass bottom rating bar ────────────────────────
 
-  Widget _buildRatingBar(FlashcardItem card, double barWidth) {
+  LiquidGlass _buildRatingBar(FlashcardItem card, double barWidth) {
     final bottomPadding = MediaQuery.of(context).padding.bottom + 16;
     Widget barContent;
 
@@ -438,34 +461,31 @@ class _FlashcardViewState extends State<FlashcardView> {
       barContent = _buildRatingButtons();
     }
 
-    return Container(
-      margin: EdgeInsets.only(bottom: bottomPadding),
+    return LiquidGlass(
+      position: LiquidGlassAlignPosition(
+        alignment: Alignment.bottomCenter,
+        margin: EdgeInsets.only(bottom: bottomPadding),
+      ),
       width: barWidth,
       height: 64,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(50),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.7),
-              borderRadius: BorderRadius.circular(50),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.5),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Center(child: barContent),
-          ),
+      magnification: 1,
+      distortion: 0.07,
+      distortionWidth: 28,
+      chromaticAberration: 0.002,
+      color: Colors.white.withValues(alpha: 22 / 255.0),
+      blur: const LiquidGlassBlur(sigmaX: 2, sigmaY: 2),
+      shape: const RoundedRectangleShape(
+        cornerRadius: 32,
+        borderWidth: 1.2,
+        lightIntensity: 1.1,
+        lightDirection: 80,
+        borderType: OpticalBorder(
+          borderSaturation: 1.2,
+          ambientIntensity: 1.0,
+          borderSolidity: 0.35,
         ),
       ),
+      child: barContent,
     );
   }
 
